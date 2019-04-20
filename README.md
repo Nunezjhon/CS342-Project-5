@@ -1,5 +1,5 @@
-# CS342-Project-5 Team 13
-Multi-Player, Networked Game
+<h1> CS342-Project-5 Team 13 </h1>
+Multi-Player Uno Card Game
 
 Developed by: Jhon Nunez, Christian Dominguez, Joseph Canning, Devashree Patel
 
