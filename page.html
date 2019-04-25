@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src = "/socket.io/socket.io.js"></script>
+        <script>
+            let socket = io(); // socket connection to server
+            socket.on('connect', data => {
+                socket.emit('join', 'Client joined the server');
+            });
+        </script>
+        <script>
+            const clicked = () => socket.emit('clicked', 'Client pressed the button');
+        </script>
+    </head>
+    <body>
+        <h1>Simple Page</h1>
+        <p>This page tests Socket.io event detection</p>
+        <p>Press this button:</p>
+        <button onclick = "clicked()">Click me!</button>
+    </body>
+</html>
