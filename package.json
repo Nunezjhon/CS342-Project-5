@@ -1,15 +1,16 @@
 {
-  "name": "simplehost",
+  "name": "uno",
   "version": "1.0.0",
-  "description": "",
-  "main": "simpleHost.js",
+  "description": "An implementation of Mattel's card game Uno made using various JavaScript libraries, HTML, and CSS.",
+  "main": "uno.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Joseph Canning",
+  "author": "Joseph Canning, ",
   "license": "ISC",
   "dependencies": {
     "express": "^4.16.4",
+    "jquery": "^3.4.0",
     "socket.io": "^2.2.0"
   }
 }

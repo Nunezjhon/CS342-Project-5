@@ -3,13 +3,45 @@
     <head>
         <script src = "/socket.io/socket.io.js"></script>
         <script>
+
             let socket = io(); // socket connection to server
+            let hand = [];
+            var match;
+
             socket.on('connect', data => {
                 socket.emit('join', 'Client joined the server');
             });
-        </script>
-        <script>
-            const clicked = () => socket.emit('clicked', 'Client pressed the button');
+
+            socket.on('match', card => {
+                match = JSON.parse(card);
+            });
+
+            socket.on('take cards', cardArr => {
+                hand = JSON.parse(cardArr);
+            });
+
+            socket.on('play', () => {
+                // TODO: notify client that it is his turn
+            });
+
+            socket.on('lose', winner => {
+                // TODO: notify the client that he lost and show who won
+            });
+
+            socket.on('op draw', (drawer, num) => {
+
+                let player = JSON.parse(drawer);
+
+                // TODO: update UI with how many cards the other player has now
+
+            });
+
+            const clicked = () => socket.emit('clicked', 'Client pressed the button'); // TODO: remove, example code
+
+            /*
+             *  Transmissions that need to be sent through events: win, played, draw
+             */
+
         </script>
     </head>
     <body>
