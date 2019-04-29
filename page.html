@@ -4,42 +4,73 @@
         <script src = "/socket.io/socket.io.js"></script>
         <script>
 
+            const minPlayers = 2; // minimum players required to start the game
             let socket = io(); // socket connection to server
-            let hand = [];
-            var match;
+            let hand = []; // cards available for play
+            let opSockets = []; // array of socket objects representing the players
+            let opponents = []; // stores player objects with members like cards and player number
+            let numPlayers = 0; // number of players in the server
+            let isHost = false; // host (the first player) decides when the game starts
+            var match; // when playing a card, it must have identical action, color, or number to the "match" card
+            var myNum; // identifying number of this client in game (i.e. the first player to join is visible to all other players as player 1)
 
-            socket.on('connect', data => {
-                socket.emit('join', 'Client joined the server');
-            });
+            const initSocket = () => {
 
-            socket.on('match', card => {
-                match = JSON.parse(card);
-            });
+                socket.on('reject', reason => {
+                    // TODO: tell the client that they can't connect to the server; reason is a string saying why
+                });
 
-            socket.on('take cards', cardArr => {
-                hand = JSON.parse(cardArr);
-            });
+                socket.on('connect', data => {
+                    socket.emit('join', 'Client joined the server');
+                });
 
-            socket.on('play', () => {
-                // TODO: notify client that it is his turn
-            });
+                socket.on('host', () => {
 
-            socket.on('lose', winner => {
-                // TODO: notify the client that he lost and show who won
-            });
+                    isHost = true;
 
-            socket.on('op draw', (drawer, num) => {
+                    // TODO: display prompt to start game; game should only be started if two or more players are in the server
 
-                let player = JSON.parse(drawer);
+                });
 
-                // TODO: update UI with how many cards the other player has now
+                socket.on('assign', num => {
+                    myNum = num;
+                });
 
-            });
+                socket.on('match', card => {
+                    match = JSON.parse(card);
+                });
+
+                socket.on('take cards', cardArr => {
+                    hand = JSON.parse(cardArr);
+                });
+
+                socket.on('play', () => {
+                    // TODO: notify client that it is his turn
+                });
+
+                socket.on('lose', winner => {
+
+                    let player = JSON.parse(winner);
+
+                    // TODO: notify the client that he lost and show who won
+                });
+
+                socket.on('op draw', (drawer, num) => {
+
+                    let player = JSON.parse(drawer);
+
+                    // TODO: update UI with how many cards the other player has now
+
+                });
+
+                socket.on('op update', players => opSockets = JSON.parse(players));
+
+            }
 
             const clicked = () => socket.emit('clicked', 'Client pressed the button'); // TODO: remove, example code
 
             /*
-             *  Transmissions that need to be sent through events: win, played, draw
+             *  Transmissions that need to be sent through UI events: start game, win, played, draw
              */
 
         </script>
