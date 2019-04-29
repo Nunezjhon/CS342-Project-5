@@ -69,6 +69,8 @@
 
             const clicked = () => socket.emit('clicked', 'Client pressed the button'); // TODO: remove, example code
 
+            initSockets();
+
             /*
              *  Transmissions that need to be sent through UI events: start game, win, played, draw
              */
