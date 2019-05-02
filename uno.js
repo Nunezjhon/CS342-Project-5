@@ -2,6 +2,7 @@
  *  uno.js
  *
  *  Author(s): Joseph Canning (jec2)
+ *  Christian Dominguez(cdomin26)
  *  Description:
  *      This file is part of an implementation of Mattel's card game Uno and runs a server on a hard-coded port that accepts up to ten players.
 */
