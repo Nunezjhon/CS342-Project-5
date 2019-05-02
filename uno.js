@@ -3,6 +3,7 @@
  *
  *  Author(s): Joseph Canning (jec2)
  *  Christian Dominguez(cdomin26)
+ *  Jhon Nunez(jnunez34)
  *  Description:
  *      This file is part of an implementation of Mattel's card game Uno and runs a server on a hard-coded port that accepts up to ten players.
 */
@@ -35,7 +36,7 @@ function getPlayerNum(client) { // convert index of client in players to player 
         return playerNum + 1;
     }
 
-}
+}//End of getPlayerNum()
 
 function Card(num, color, action) { // Card constructor
 
@@ -44,7 +45,7 @@ function Card(num, color, action) { // Card constructor
     this.action = action; // draw two, skip, etc.
     this.imgID = '' + num + color + action; // name of image representing this card
 
-}
+}//End of Card constructor()
 
 function Player(socket, cards, num) { // Player constructor
 
@@ -52,7 +53,7 @@ function Player(socket, cards, num) { // Player constructor
     this.cards = cards; // number of cards
     this.num = num; // player number
 
-}
+}//End of Player constructor
 
 function initCards() { // creates the 108 Uno cards
 
@@ -75,7 +76,7 @@ function initCards() { // creates the 108 Uno cards
 
     console.log(`${cards.length} cards instantiated`);
 
-}
+}//End of initCards()
 
 function makeDeck() { // assign deck a Fischer-Yates shuffle of cards
 
@@ -92,7 +93,7 @@ function makeDeck() { // assign deck a Fischer-Yates shuffle of cards
 
     console.log(`${deck.length} cards in deck`);
 
-}
+}//End of makeDeck()
 
 function dealCards(num) { // returns array of cards from deck
 
@@ -108,7 +109,7 @@ function dealCards(num) { // returns array of cards from deck
 
     return dealt;
 
-}
+}//End of dealCards()
 
 // initialize server
 initCards();
