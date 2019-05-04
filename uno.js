@@ -2,8 +2,6 @@
  *  uno.js
  *
  *  Author(s): Joseph Canning (jec2)
- *  Christian Dominguez(cdomin26)
- *  Jhon Nunez(jnunez34)
  *  Description:
  *      This file is part of an implementation of Mattel's card game Uno and runs a server on a hard-coded port that accepts up to ten players.
 */
@@ -17,7 +15,8 @@ const colors = ['red', 'blue', 'yellow', 'green'];
 const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9]; // zero is excluded for convenience; see initCards
 const actions = ['draw2', 'draw4', 'skip', 'reverse', 'wild'];
 const playerCap = 10;
-let players = []; // array of clients on server
+let players = []; // array of players on server
+let sockets = []; // array of clients' sockets
 let cards = []; // array of all cards; effectively final after initialization
 let deck = []; // shuffled deck of cards that are dealt to the players
 let turn = 0; // player whose turn it is
@@ -36,7 +35,7 @@ function getPlayerNum(client) { // convert index of client in players to player 
         return playerNum + 1;
     }
 
-}//End of getPlayerNum()
+}
 
 function Card(num, color, action) { // Card constructor
 
@@ -45,15 +44,15 @@ function Card(num, color, action) { // Card constructor
     this.action = action; // draw two, skip, etc.
     this.imgID = '' + num + color + action; // name of image representing this card
 
-}//End of Card constructor()
+}
 
-function Player(socket, cards, num) { // Player constructor
+function Player(cards, num) { // Player constructor
 
-    this.socket = socket; // player's web socket
+    // this.socket = socket; // player's web socket
     this.cards = cards; // number of cards
     this.num = num; // player number
 
-}//End of Player constructor
+}
 
 function initCards() { // creates the 108 Uno cards
 
@@ -76,7 +75,7 @@ function initCards() { // creates the 108 Uno cards
 
     console.log(`${cards.length} cards instantiated`);
 
-}//End of initCards()
+}
 
 function makeDeck() { // assign deck a Fischer-Yates shuffle of cards
 
@@ -93,7 +92,7 @@ function makeDeck() { // assign deck a Fischer-Yates shuffle of cards
 
     console.log(`${deck.length} cards in deck`);
 
-}//End of makeDeck()
+}
 
 function dealCards(num) { // returns array of cards from deck
 
@@ -109,7 +108,7 @@ function dealCards(num) { // returns array of cards from deck
 
     return dealt;
 
-}//End of dealCards()
+}
 
 // initialize server
 initCards();
@@ -144,7 +143,8 @@ io.on('connection', client => {
 
     client.on('join', msg => { // client has joined the server; give them seven cards and let others know
 
-        players.push(new Player(client, 7, players.length + 1));
+        sockets.push(client);
+        players.push(new Player(7, players.length + 1));
         client.emit('assign', players.length);
         client.emit('take cards', JSON.stringify(dealCards(7)));
         client.broadcast.emit('op update', JSON.stringify(players));
@@ -161,12 +161,14 @@ io.on('connection', client => {
 
     client.on('disconnect', msg => {  // client has left the server
         
-        players.splice(players.indexOf(players.findIndex(player => player.socket.id === client.id)), 1);
+        const del = sockets.indexOf(client);
+        sockets.splice(del, 1);
+        players.splice(del, 1);
         client.broadcast.emit('op update', JSON.stringify(players));
         console.log(msg);
         console.log(`\n${players.length} clients still connected:`);
         let i = 0;
-        players.forEach(player => console.log('\t' + ++i + ': ' + player.socket.id));
+        sockets.forEach(player => console.log('\t' + ++i + ': ' + player.id));
     
     });
 
@@ -194,7 +196,7 @@ io.on('connection', client => {
 
         }
 
-        io.to(`${players[turn].socket.id}`).emit('play');
+        io.to(`${sockets[turn].id}`).emit('play');
 
     });
 
