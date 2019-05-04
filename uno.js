@@ -1,7 +1,7 @@
 /*
  *  uno.js
  *
- *  Author(s): Joseph Canning (jec2)
+ *  Author(s): Joseph Canning (jec2), Christian Dominguez (cdomin26), Jhon Nunez (jnunez34)
  *  Description:
  *      This file is part of an implementation of Mattel's card game Uno and runs a server on a hard-coded port that accepts up to ten players.
 */
@@ -75,7 +75,7 @@ function initCards() { // creates the 108 Uno cards
 
     console.log(`${cards.length} cards instantiated`);
 
-}
+} //end initCards
 
 function makeDeck() { // assign deck a Fischer-Yates shuffle of cards
 
@@ -92,7 +92,7 @@ function makeDeck() { // assign deck a Fischer-Yates shuffle of cards
 
     console.log(`${deck.length} cards in deck`);
 
-}
+} //end makeDeck
 
 function dealCards(num) { // returns array of cards from deck
 
@@ -108,7 +108,7 @@ function dealCards(num) { // returns array of cards from deck
 
     return dealt;
 
-}
+} //end dealCards
 
 // initialize server
 initCards();
@@ -217,6 +217,6 @@ io.on('connection', client => {
 
     });
 
-});
+}); //end io.on call
 
 server.listen(port);
