@@ -1,0 +1,75 @@
+import java.util.HashMap;
+
+public class cardImages {
+
+	private HashMap<Integer, String> idToPic;
+	
+	public cardImages() {
+		
+
+		idToPic = new HashMap<>();
+		
+		//Add Blue Cards
+		idToPic.put(0, "blue_0_large");
+		idToPic.put(1, "blue_1_large");
+		idToPic.put(2, "blue_2_large");
+		idToPic.put(3, "blue_3_large");
+		idToPic.put(4, "blue_4_large");
+		idToPic.put(5, "blue_5_large");
+		idToPic.put(6, "blue_6_large");
+		idToPic.put(7, "blue_7_large");
+		idToPic.put(8, "blue_8_large");
+		idToPic.put(9, "blue_9_large");
+		
+		//Add Green Cards
+		idToPic.put(10, "green_0_large");
+		idToPic.put(11, "green_1_large");
+		idToPic.put(12, "green_2_large");
+		idToPic.put(13, "green_3_large");
+		idToPic.put(14, "green_4_large");
+		idToPic.put(15, "green_5_large");
+		idToPic.put(16, "green_6_large");
+		idToPic.put(17, "green_7_large");
+		idToPic.put(18, "green_8_large");
+		idToPic.put(19, "green_9_large");
+		
+		//Add Heart Suite
+		idToPic.put(27, "AH");
+		idToPic.put(28, "2H");
+		idToPic.put(29, "3H");
+		idToPic.put(30, "4H");
+		idToPic.put(31, "5H");
+		idToPic.put(32, "6H");
+		idToPic.put(33, "7H");
+		idToPic.put(34, "8H");
+		idToPic.put(35, "9H");
+		idToPic.put(36, "10H");
+		idToPic.put(37, "JH");
+		idToPic.put(38, "QH");
+		idToPic.put(39, "KH");
+		
+		//Add Spades Suite
+		idToPic.put(40, "AS");
+		idToPic.put(41, "2S");
+		idToPic.put(42, "3S");
+		idToPic.put(43, "4S");
+		idToPic.put(44, "5S");
+		idToPic.put(45, "6S");
+		idToPic.put(46, "7S");
+		idToPic.put(47, "8S");
+		idToPic.put(48, "9S");
+		idToPic.put(49, "10S");
+		idToPic.put(50, "JS");
+		idToPic.put(51, "QS");
+		idToPic.put(52, "KS");
+		
+
+	}
+	
+	public String getCardPicture( int n) {
+		
+		return idToPic.get(n);
+	}
+	
+	
+}

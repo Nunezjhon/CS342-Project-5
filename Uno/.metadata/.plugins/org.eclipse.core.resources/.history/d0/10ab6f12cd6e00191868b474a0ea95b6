@@ -1,0 +1,46 @@
+import java.util.ArrayList;
+
+public class unoDeck {
+
+	private ArrayList<unoCard> deck;
+	
+	public unoDeck (){
+	
+		deck = new ArrayList<unoCard>();
+		
+		for(int i = 0; i <= 39; i++) {
+			
+			unoCard card = new unoCard();
+			card.setId(i);
+			
+			//initiate card color
+			if (i < 10) {
+				card.setColor("Blue");
+			}
+			else if (i > 9 || i < 20) {
+				card.setColor("Green");
+			}
+			else if (i > 19 || i < 30) {
+				card.setColor("Yellow");
+			}
+			else if (i > 29 || i < 40) {
+				card.setColor("Red");
+			}
+			
+	
+		}
+		
+	}
+	
+	public void shuffle() {
+		
+	}
+	
+	public ArrayList<unoCard> dealHand(int num){
+		
+		ArrayList<unoCard> hand = new ArrayList<unoCard>();
+		
+		
+		return hand;
+	}
+}

@@ -1,0 +1,30 @@
+import java.util.ArrayList;
+
+public class unoDeck {
+
+	private ArrayList<unoCard> deck;
+	
+	public unoDeck (){
+	
+		deck = new ArrayList<unoCard>();
+		
+		for(int i = 1; i < 120; i++) {
+			
+			
+			
+		}
+		
+	}
+	
+	public void shuffle() {
+		
+	}
+	
+	public ArrayList<unoCard> dealHand(int num){
+		
+		ArrayList<unoCard> hand = new ArrayList<unoCard>();
+		
+		
+		return hand;
+	}
+}
