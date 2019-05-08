@@ -52,10 +52,15 @@ public class unoServer extends Application {
     public static final String FORCE_SIG = "force:";          // force client disconnect
     public static final String UPDATE_SIG = "update list"; 	  // update list of clients 
     public static final String CLEAR_SIG = "clear list";	  // clears list of clients	
-    public static final String CHALLENGE_SIG = "challenge:"; // challenge an opponent from our list
-    public static final String REJECT_SIG = "reject"; 			//reject challenge
-    public static final String DISABLE_SIG = "disable";		  //disable ability to challenge another client 
-
+    public static final String CHALLENGE_SIG = "challenge:";  // challenge an opponent from our list
+    public static final String REJECT_SIG = "reject"; 		  // reject challenge
+    public static final String DISABLE_SIG = "disable";		  // disable ability to challenge another client 
+    
+    public static final String CARD_SIG = "card:";			  // signal for cards given by the server
+    public static final String SCREEN_SIG = "update screen";  // update card pictures displayed
+    public static final String PLAYED_SIG = "played:";    	  // card client played
+    
+    
     enum Play { // enum values to be used as signals for plays
 
         ROCK,
@@ -65,6 +70,12 @@ public class unoServer extends Application {
         SPOCK
 
     }
+
+    
+    
+    
+    
+    
     
 // reference types
 private ServerSocket server;						// connects clients
@@ -256,12 +267,31 @@ private void startGame(InputListener one, InputListener two, InputListener three
 
 	deck = new unoDeck(); //create and shuffle deck
 	deck.shuffle();
+	
+	
+	//deal cards
+	for (int i = 0; i < 4; i++) {
 
+		ArrayList<unoCard> hand = deck.dealHand(7);
+		
+		//String cards = "TURN_SIG";
 	
+		for( int j = 0; j < 7; j++) {
+			listeners.get(i).send(CARD_SIG + hand.get(j).getId()); //send card id
+		}
+		
+		
+	}
 	
+	//update cards
+	for(int i = 0; i<4 ; i++) {
+		listeners.get(i).send(SCREEN_SIG);
+	}
+
 	
 	new Thread(() -> {
 
+		
 		one.send(TURN_SIG);
 		two.send(DISABLE_SIG);
 		three.send(DISABLE_SIG);
@@ -466,6 +496,16 @@ public class InputListener extends Thread {
                     e.printStackTrace();
                 }
             }
+            else if (last.contains(PLAYED_SIG)) {//add play
+            	
+            	int x = Integer.parseInt(last.substring(PLAYED_SIG.length()) ); 
+
+            	//update card played
+            	for(int i = 0; i<4 ; i++) {
+            		listeners.get(i).send(PLAYED_SIG+x);
+            	}
+           	
+            }
             else if (last.contains(CHALLENGE_SIG)) {
             	
             	//String ids = last.substring(CHALLENGE_SIG.length()); // for last = "challenge:100:101," get "100:101"
@@ -496,6 +536,11 @@ public class InputListener extends Thread {
             		
             	//}
             }
+            
+            
+            
+            
+            
             
         }
         // close IO once Socket is closed

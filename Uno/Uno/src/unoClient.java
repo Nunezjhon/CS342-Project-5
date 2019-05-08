@@ -22,6 +22,7 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 
@@ -42,9 +43,18 @@ public class unoClient extends Application {
     public static final String FORCE_SIG = "force:";          // force client disconnect
     public static final String UPDATE_SIG = "update list"; 	  // update list of clients 
     public static final String CLEAR_SIG = "clear list";	  // clears list of clients	
-    public static final String CHALLENGE_SIG = "challenge:"; // challenge an opponent from our list
-    public static final String REJECT_SIG = "reject"; 			//reject challenge
-    public static final String DISABLE_SIG = "disable";		  //disable ability to challenge another client 	
+    public static final String CHALLENGE_SIG = "challenge:";  // challenge an opponent from our list
+    public static final String REJECT_SIG = "reject"; 		  // reject challenge
+    public static final String DISABLE_SIG = "disable";		  // disable ability to challenge another client 	
+    
+    public static final String CARD_SIG = "card:";			  // signal for cards given by the server
+    public static final String SCREEN_SIG = "update screen";  // update card pictures displayed
+    public static final String PLAYED_SIG = "played:";    	  // card client played
+    
+    
+    
+    
+    
     
     // primitives/strings
     private final int WIN_WIDTH = 550;                  // width of the UI window
@@ -58,6 +68,12 @@ public class unoClient extends Application {
     private String address;                             // IP address of server to which the client is connecting
     private volatile String last;                       // last message from server
     private ObservableList<Integer> clientList;         // list of clients connected
+    
+    
+    private ArrayList<cardPic> cardPics = new ArrayList<cardPic>();
+    private cardImages cardPhotos = new cardImages();
+    
+    
     
     // UI
     private Scene menu;
@@ -118,6 +134,8 @@ public class unoClient extends Application {
         
         // images
         images = new Image[NUM_PLAYS];
+        
+        
         images[0] = new Image(IMG_PATH + "card_back_alt_large.png", IMG_WIDTH, IMG_HEIGHT, false, true);
         images[1] = new Image(IMG_PATH + "card_back_alt_large.png", IMG_WIDTH, IMG_HEIGHT, false, true);
         images[2] = new Image(IMG_PATH + "card_back_alt_large.png", IMG_WIDTH, IMG_HEIGHT, false, true);
@@ -125,6 +143,8 @@ public class unoClient extends Application {
         images[4] = new Image(IMG_PATH + "card_back_alt_large.png", IMG_WIDTH, IMG_HEIGHT, false, true);
         images[5] = new Image(IMG_PATH + "card_back_alt_large.png", IMG_WIDTH, IMG_HEIGHT, false, true);
         images[6] = new Image(IMG_PATH + "card_back_alt_large.png", IMG_WIDTH, IMG_HEIGHT, false, true);
+        
+        
         
         main = new Image(IMG_PATH + "card_back_large.png", 150, 200, false, true);
         mainImage = new ImageView(main);
@@ -354,13 +374,20 @@ public class unoClient extends Application {
         }
         for (int i = 0; i < NUM_PLAYS; i++) { // set button actions
             final int j = i; // for lambda
+            int x = i;
             plays[i].setOnAction(e -> {
                 new Thread(() -> {
                     for (Button b : plays) {
                         Platform.runLater(() -> b.setDisable(true));
                     }
+                    
                     synchronized (this) {
-                        send(PLAY_SIG);
+                        //
+                    	cardPics.get(x).setStatus(true);//disable card
+                    	
+                    	send(PLAYED_SIG+cardPics.get(x).getId());
+                    	send(PLAY_SIG);
+                    	
                         delay();
                         send("" + j);
                     }
@@ -421,6 +448,35 @@ public class unoClient extends Application {
                     Platform.runLater(() -> message.setText("Waiting for opponent"));
                     id = 0;
 
+                }
+                else if (last.contains(CARD_SIG)) {
+
+                	int x = Integer.parseInt(last.substring(CARD_SIG.length()) );   	
+                	System.out.println("Number => "+x);  
+                	cardPic card = new cardPic(x,false);
+                	cardPics.add(card);
+                	
+                }
+                else if (last.equals(SCREEN_SIG)) {
+                	
+                	for(int i =0; i < NUM_PLAYS; i++) {
+                		String x = cardPhotos.getCardPicture( cardPics.get(i).getId() );
+                		Image pic = new Image(IMG_PATH + x +".png", IMG_WIDTH, IMG_HEIGHT, false, true);
+                		System.out.println(IMG_PATH+x+".png");
+                		ImageView img = new ImageView(pic);
+                		int index = i;
+                		Platform.runLater(() -> plays[index].setGraphic(img) );
+                	}
+                	
+                }
+                else if (last.contains(PLAYED_SIG)) {
+                	int y = Integer.parseInt(last.substring(PLAYED_SIG.length()) );   
+                	String x = cardPhotos.getCardPicture( y );
+                	Image pic = new Image(IMG_PATH + x +".png", 150, 200, false, true);
+                	//ImageView img = new ImageView(pic);
+                	Platform.runLater(() -> mainImage.setImage(pic) );
+                	
+                
                 }
                 else if (last.contains(UPDATE_SIG)) {//update list of clients
                 	int x = Integer.parseInt(last.substring(UPDATE_SIG.length()));
@@ -555,6 +611,7 @@ public class unoClient extends Application {
         });
 
     }
+     
 
     // send a signal to the server
     private void send(String message) {
