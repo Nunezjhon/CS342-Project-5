@@ -42,13 +42,13 @@ public class unoServer extends Application {
     public static final String WAIT_SIG = "wait";             // client is the first to connect to server
     public static final String TURN_SIG = "your move";        // client's turn
     public static final String PLAY_SIG = "client played";    // client made a play; server needs to read/process it
-    public static final String WIN_SIG = "win";               // client won round/game
+    
     public static final String LOSE_SIG = "lose";             // client lost round/game
-    public static final String TIE_SIG = "tie";               // both clients tied
+    
     public static final String OP_SIG = "op:";                // opponent's score
     public static final String END_SIG = "over";              // game is over
-    public static final String YES_SIG = "yes:";              // client wants rematch
-    public static final String NO_SIG = "no:";                // client doesn't want rematch
+    public static final String YES_SIG = "yes:";              // client wants re-match
+    public static final String NO_SIG = "no:";                // client doesn't want re-match
     public static final String FORCE_SIG = "force:";          // force client disconnect
     public static final String UPDATE_SIG = "update list"; 	  // update list of clients 
     public static final String CLEAR_SIG = "clear list";	  // clears list of clients	
@@ -59,7 +59,12 @@ public class unoServer extends Application {
     public static final String CARD_SIG = "card:";			  // signal for cards given by the server
     public static final String SCREEN_SIG = "update screen";  // update card pictures displayed
     public static final String PLAYED_SIG = "played:";    	  // card client played
+    public static final String WINNER_SIG = "winner:";        // client won game
     
+    public static final String PASS_SIG = "pass";			  // player passed
+    public static final String TIE_SIG = "tie";               // both clients tied
+    public static final String WIN_SIG = "win";               // client won round/game
+    public static final String QUIT_SIG = "quit";             // close window signal
     
     enum Play { // enum values to be used as signals for plays
 
@@ -89,7 +94,7 @@ private ArrayList<Integer> clientList;
 // primitives
 private int portNumber;
 private int nextID;									// next client ID to be assigned
-
+//private boolean pass = false;
 
 private unoDeck deck;
 
@@ -137,7 +142,7 @@ public void start(Stage primaryStage) {
 	gamePane.setTop(top);
 	gamePane.setCenter(center);
 	
-	host = new Scene(gamePane, 340,250);//create scene for host
+	host = new Scene(gamePane, 380,250);//create scene for host
 	primaryStage.setScene(host); //set Scene
 	primaryStage.show(); //show Scene
 	
@@ -145,6 +150,9 @@ public void start(Stage primaryStage) {
 	on.setDisable(true);
 	off.setDisable(true);
 
+	
+	
+	
 	
 	setPort.setOnAction(e -> { // assign portNumber to value entered by user
 		try {
@@ -274,8 +282,6 @@ private void startGame(InputListener one, InputListener two, InputListener three
 
 		ArrayList<unoCard> hand = deck.dealHand(7);
 		
-		//String cards = "TURN_SIG";
-	
 		for( int j = 0; j < 7; j++) {
 			listeners.get(i).send(CARD_SIG + hand.get(j).getId()); //send card id
 		}
@@ -297,74 +303,35 @@ private void startGame(InputListener one, InputListener two, InputListener three
 		three.send(DISABLE_SIG);
 		four.send(DISABLE_SIG);
 		
-		
+		///OUTER_LOOP:
 		while(!one.last.equals(WIN_SIG)) {//until winner
 		
-			while (!one.last.equals(PLAY_SIG)) {}
-			while (one.last.equals(PLAY_SIG)) {}
+	
+			while (!one.last.equals(PLAY_SIG) ) {}
+			while (one.last.equals(PLAY_SIG) ) {}
 			
 			//Second player goes
 			two.send(TURN_SIG);
-			
-			while (!two.last.equals(PLAY_SIG)) {}
-			while (two.last.equals(PLAY_SIG)) {}
+		
+			while (!two.last.equals(PLAY_SIG) ) {}
+			while (two.last.equals(PLAY_SIG) ) {}
 			
 			//Third player goes
 			three.send(TURN_SIG);
 			
-			while (!three.last.equals(PLAY_SIG)) {}
-			while (three.last.equals(PLAY_SIG)) {}
+			while (!three.last.equals(PLAY_SIG) ) {}
+			while (three.last.equals(PLAY_SIG) ) {}
 			
 			//Fourth player goes
 			four.send(TURN_SIG);
 			
-			while (!four.last.equals(PLAY_SIG)) {}
-			while (four.last.equals(PLAY_SIG)) {}
-		
+			while (!four.last.equals(PLAY_SIG) ) {}
+			while (four.last.equals(PLAY_SIG) ) {}
+			
 			//First player goes
 			one.send(TURN_SIG);
-		
 		}
 		
-		/*
-		Play x, y;
-		
-		one.send(TURN_SIG);
-		two.send(DISABLE_SIG); 
-		
-        while (!one.last.equals(PLAY_SIG)) {}
-        while (one.last.equals(PLAY_SIG)) {} //wait for next signal for number 
-        
-		x = intToPlay(Integer.parseInt(one.last));
-		
-        two.send(TURN_SIG);
-        while (!two.last.equals(PLAY_SIG)) {}
-        while (two.last.equals(PLAY_SIG)) {} //wait for next signal for number 
-        y = intToPlay(Integer.parseInt(two.last));
-        System.out.println(""+two.last);
-       
-        
-        int z = comparePlays(x,y);
-        System.out.println(""+z);
-        
-        if (z == 0) {
-        	one.send(WIN_SIG);
-        	two.send(LOSE_SIG);
-        }
-        if (z == 1) {
-        	two.send(WIN_SIG);
-        	one.send(LOSE_SIG);
-        }
-        if (z == -1) {
-        	one.send(TIE_SIG);
-        	two.send(TIE_SIG);
-        }     
-        
-        //send players their opponents play
-        two.send(OP_SIG + x.toString());
-        one.send(OP_SIG + y.toString());
-        */
-        
 	}).start();
 
 }
@@ -384,82 +351,6 @@ public Play intToPlay(int play) { // converts int representation of a play to an
 
 }
 
-// returns 0 if player 1's play wins, 1 if player 2's play wins, or -1 if they match
-//private int comparePlays(Play one, Play two) { //one -> player 1, two -> player 2
-
-//	if (one == Play.ROCK) {
-//
-//		if (two == Play.PAPER) {
-//			return 1;
-//		} else if (two == Play.SCISSORS) {
-//			return 0;
-//		} else if (two == Play.LIZARD) {
-//			return 0;
-//		} else if (two == Play.SPOCK) {
-//			return 1;
-//		} else {
-//			return -1;
-//		}
-//
-//	} else if (one == Play.PAPER) {
-//
-//		if (two == Play.ROCK) {
-//			return 0;
-//		} else if (two == Play.SCISSORS) {
-//			return 1;
-//		} else if (two == Play.LIZARD) {
-//			return 1;
-//		} else if (two == Play.SPOCK) {
-//			return 0;
-//		} else {
-//			return -1;
-//		}
-//
-//	} else if (one == Play.SCISSORS) {
-//
-//		if (two == Play.ROCK) {
-//			return 1;
-//		} else if (two == Play.PAPER) {
-//			return 0;
-//		} else if (two == Play.LIZARD) {
-//			return 0;
-//		} else if (two == Play.SPOCK) {
-//			return 1;
-//		} else {
-//			return -1;
-//		}
-//
-//	} else if (one == Play.LIZARD) {
-//
-//		if (two == Play.ROCK) {
-//			return 1;
-//		} else if (two == Play.PAPER) {
-//			return 0;
-//		} else if (two == Play.SCISSORS) {
-//			return 1;
-//		} else if (two == Play.SPOCK) {
-//			return 0;
-//		} else {
-//			return -1;
-//		}
-//
-//	} else { // one == spock
-//
-//		if (two == Play.ROCK) {
-//			return 0;
-//		} else if (two == Play.PAPER) {
-//			return 1;
-//		} else if (two == Play.SCISSORS) {
-//			return 0;
-//		} else if (two == Play.LIZARD) {
-//			return 1;
-//		} else {
-//			return -1;
-//		}
-//
-//	}
-
-//}
 
 public class InputListener extends Thread {
 
@@ -491,55 +382,87 @@ public class InputListener extends Thread {
             last = in.nextLine();
             if (last.contains(NO_SIG)) { // client has quit the game; close their Socket
                 try {
+                    
+                    System.out.println("client disconnected");
+                    
+                    //for(int i = 0; i<4 ; i++) {
+                	//	listeners.get(i).send(QUIT_SIG);
+                	//}
+                    
                     client.close();
+                    nextID--; //remove client
+                    Platform.runLater(() -> clientNumber.setText(""+nextID)  ); //update number of clients on server
+    				//Platform.runLater(() -> clientNumber.setTextFill(Color.GREEN)  );
+    				
+    				
+                   
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
+            else if (last.contains(QUIT_SIG)) {//add play
+            
+            	
+            	// primaryStage.close();
+           	
+            }
             else if (last.contains(PLAYED_SIG)) {//add play
             	
             	int x = Integer.parseInt(last.substring(PLAYED_SIG.length()) ); 
-
             	//update card played
             	for(int i = 0; i<4 ; i++) {
             		listeners.get(i).send(PLAYED_SIG+x);
             	}
            	
             }
+            else if (last.contains(WINNER_SIG)) {//pass
+            	
+            	int y = Integer.parseInt(last.substring(WINNER_SIG.length()) );  
+            	
+            	//pass = true;
+            	System.out.println("Win signal received!");
+            	for(int i = 0; i<4 ; i++) {
+            		
+            		if (i == y-1) {
+            			listeners.get(i).send(WIN_SIG);
+            		}
+            		else {
+            			listeners.get(i).send(LOSE_SIG);
+            		}
+            	
+            	}
+            	
+            	
+            }
+            else if (last.equals(TIE_SIG)) {
+            	
+            	System.out.println("Everyone passed!");
+            	for(int i = 0; i<4 ; i++) {
+            		listeners.get(i).send(TIE_SIG);
+            	}
+            	
+            }
+            else if (last.equals(PASS_SIG)) {
+            	
+            	System.out.println("player passed!");
+            	for(int i = 0; i<4 ; i++) {
+            		listeners.get(i).send(PASS_SIG); //increase the pass counter
+            	}
+            	
+            }
+            
+            
             else if (last.contains(CHALLENGE_SIG)) {
             	
-            	//String ids = last.substring(CHALLENGE_SIG.length()); // for last = "challenge:100:101," get "100:101"
-                //String[] idsSplit =  ids.split(":"); // split ids into a new substring around each colon and newline character
-                //int id1 = Integer.parseInt(idsSplit[0]); // first substring is the first id
-                //int id2 = Integer.parseInt(idsSplit[1]); // second substring is the second id
-                //int id3 = Integer.parseInt(idsSplit[2]); // second substring is the second id
-                //int id4 = Integer.parseInt(idsSplit[3]); // second substring is the second id
             	
             	//InputListener a = listeners.get(id1-1);
                 InputListener a = listeners.get(0);
             	InputListener b = listeners.get(1);
             	InputListener c = listeners.get(2);
             	InputListener d = listeners.get(3);
-            	
-            	//if(id2 != playing.get(id2) ) {//not in hashmap
-            	
-            	
-            	//Platform.runLater(() -> gameTitle.setText("Player "+""+id1  +" Challenges Player "+id2) );//test
-            	//add players to playing hashmap 
-            	//playing.put(id1,id1);
-            	//playing.put(id2,id2);
             	startGame(a,b,c,d);	//start game for two clients
-            	//}
-            	//else {
-            		
-            		//a.send(REJECT_SIG);
-            		
-            	//}
+
             }
-            
-            
-            
-            
             
             
         }

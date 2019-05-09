@@ -12,10 +12,17 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.BackgroundSize;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
@@ -33,26 +40,28 @@ public class unoClient extends Application {
     public static final String WAIT_SIG = "wait";             // client is the first to connect to server
     public static final String TURN_SIG = "your move";        // client's turn
     public static final String PLAY_SIG = "client played";    // client made a play; server needs to read/process it
-    public static final String WIN_SIG = "win";               // client won round/game
+    
     public static final String LOSE_SIG = "lose";             // client lost round/game
-    public static final String TIE_SIG = "tie";               // both clients tied
+    
     public static final String OP_SIG = "op:";                // opponent's score
     public static final String END_SIG = "over";              // game is over
-    public static final String YES_SIG = "yes:";              // client wants rematch
-    public static final String NO_SIG = "no:";                // client doesn't want rematch
+    public static final String YES_SIG = "yes:";              // client wants re-match
+    public static final String NO_SIG = "no:";                // client doesn't want re-match
     public static final String FORCE_SIG = "force:";          // force client disconnect
     public static final String UPDATE_SIG = "update list"; 	  // update list of clients 
     public static final String CLEAR_SIG = "clear list";	  // clears list of clients	
     public static final String CHALLENGE_SIG = "challenge:";  // challenge an opponent from our list
     public static final String REJECT_SIG = "reject"; 		  // reject challenge
-    public static final String DISABLE_SIG = "disable";		  // disable ability to challenge another client 	
+    //public static final String DISABLE_SIG = "disable";		  // disable ability to challenge another client 	
     
     public static final String CARD_SIG = "card:";			  // signal for cards given by the server
     public static final String SCREEN_SIG = "update screen";  // update card pictures displayed
     public static final String PLAYED_SIG = "played:";    	  // card client played
-    
-    
-    
+    public static final String WINNER_SIG = "winner:";        // client won game
+    public static final String PASS_SIG = "pass";			  // player passed
+    public static final String TIE_SIG = "tie";               // both clients tied
+    public static final String WIN_SIG = "win";               // client won round/game
+    public static final String QUIT_SIG = "quit";             // close window signal
     
     
     
@@ -69,13 +78,21 @@ public class unoClient extends Application {
     private volatile String last;                       // last message from server
     private ObservableList<Integer> clientList;         // list of clients connected
     
+    private volatile int cardsPlayed = 0;				// amount of cards played
+    private volatile int timesPassed = 0;				// amount of times passed
     
-    private ArrayList<cardPic> cardPics = new ArrayList<cardPic>();
+    private ArrayList<cardPic> cardPics = new ArrayList<cardPic>(); // card images
+    private ArrayList<unoCard> cards = new ArrayList<unoCard>();	// list of client card objects
+    private unoDeck deck = new unoDeck();							// deck of cards (for identifying dealt cards)
     private cardImages cardPhotos = new cardImages();
+    private volatile unoCard cardOnTop = new unoCard();					// the card on top of the deck after a play
+    
+    
     
     
     
     // UI
+    private Stage myStage;
     private Scene menu;
     private VBox vbox;
     private HBox playBox;
@@ -132,17 +149,19 @@ public class unoClient extends Application {
         //vbox.getChildren().addAll(scoreText, otherScore, otherPlay, message);
         vbox.getChildren().addAll(message);
         
+        
+        
         // images
         images = new Image[NUM_PLAYS];
         
         
-        images[0] = new Image(IMG_PATH + "card_back_alt_large.png", IMG_WIDTH, IMG_HEIGHT, false, true);
-        images[1] = new Image(IMG_PATH + "card_back_alt_large.png", IMG_WIDTH, IMG_HEIGHT, false, true);
-        images[2] = new Image(IMG_PATH + "card_back_alt_large.png", IMG_WIDTH, IMG_HEIGHT, false, true);
-        images[3] = new Image(IMG_PATH + "card_back_alt_large.png", IMG_WIDTH, IMG_HEIGHT, false, true);
-        images[4] = new Image(IMG_PATH + "card_back_alt_large.png", IMG_WIDTH, IMG_HEIGHT, false, true);
-        images[5] = new Image(IMG_PATH + "card_back_alt_large.png", IMG_WIDTH, IMG_HEIGHT, false, true);
-        images[6] = new Image(IMG_PATH + "card_back_alt_large.png", IMG_WIDTH, IMG_HEIGHT, false, true);
+        images[0] = new Image(IMG_PATH + "card_back_large.png", IMG_WIDTH, IMG_HEIGHT, false, true);
+        images[1] = new Image(IMG_PATH + "card_back_large.png", IMG_WIDTH, IMG_HEIGHT, false, true);
+        images[2] = new Image(IMG_PATH + "card_back_large.png", IMG_WIDTH, IMG_HEIGHT, false, true);
+        images[3] = new Image(IMG_PATH + "card_back_large.png", IMG_WIDTH, IMG_HEIGHT, false, true);
+        images[4] = new Image(IMG_PATH + "card_back_large.png", IMG_WIDTH, IMG_HEIGHT, false, true);
+        images[5] = new Image(IMG_PATH + "card_back_large.png", IMG_WIDTH, IMG_HEIGHT, false, true);
+        images[6] = new Image(IMG_PATH + "card_back_large.png", IMG_WIDTH, IMG_HEIGHT, false, true);
         
         
         
@@ -169,16 +188,16 @@ public class unoClient extends Application {
         pass.setDisable(true);
         pass.setOnAction(e -> {
         
-        	//if(id == (int) opponents.getValue()) {
-        	//	message.setText("Cannot challenge yourself!");
-        	//}
-        	//else {
-        	//	int x = (int) opponents.getValue();
-        	//	send(CHALLENGE_SIG + id + ":" + x);
-        	//	message.setText("Challenged Player: "+ opponents.getValue().toString());
-        	//	challenge.setDisable(true);
-        	//	opponents.setDisable(true);
-        	//}
+        	pass.setDisable(true);
+        	
+        	
+        	send(PASS_SIG);
+        	message.setText("Opponent's turn");
+        	if(timesPassed < 3) {
+	        	delay();
+	        	send(PLAY_SIG);
+	        	send("" + id);
+        	}
         	
         });
       
@@ -202,6 +221,8 @@ public class unoClient extends Application {
 
         	ipEnter.setDisable(true);
         	ipField.setDisable(true);
+        	portEnter.setDisable(false);
+        	portField.setDisable(false);
         	
             address = ipField.getText();
 
@@ -224,6 +245,10 @@ public class unoClient extends Application {
         portField.setPrefSize(75, 20);
         portEnter = new Button("Enter");
         portEnter.setPrefSize(50, 20);
+        portEnter.setDisable(true);
+    	portField.setDisable(true);
+        
+        
         portEnter.setOnAction(e -> {
 
         	portEnter.setDisable(true);
@@ -299,12 +324,36 @@ public class unoClient extends Application {
     public void start(Stage stage) { // display stage
 
         // stage
-        menu = new Scene(vbox, WIN_WIDTH, WIN_HEIGHT);
-        stage.setScene(menu);
-        stage.setTitle("Uno Client");
-        stage.setResizable(false);
-        stage.show();
-
+    	myStage = stage;
+        //menu = new Scene(vbox, WIN_WIDTH, WIN_HEIGHT);
+        //stage.setScene(menu);
+        //stage.setTitle("Uno Client");
+        //stage.setResizable(false);
+        //stage.show();
+    	
+        
+        BorderPane gamePane = new BorderPane();
+        //set background image
+        BackgroundImage myBI= new BackgroundImage(new Image(IMG_PATH+"background.jpg",600,700,false,true),
+      		        BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER,
+      		          BackgroundSize.DEFAULT); //550, 680
+      		
+      	gamePane.setBackground(new Background(myBI));
+        
+        gamePane.setCenter(vbox);
+        
+        menu = new Scene(gamePane, WIN_WIDTH, WIN_HEIGHT);
+        
+        
+        
+        myStage.setScene(menu);
+        myStage.setTitle("Uno Client");
+        myStage.setResizable(false);
+        
+        
+        
+        
+        myStage.show();
     }
 
     @Override
@@ -337,7 +386,6 @@ public class unoClient extends Application {
                 } else {
                     System.err.println("\nNot connected to server");
                 }
-
             }
 
         }).start();
@@ -362,19 +410,28 @@ public class unoClient extends Application {
     // initialize the buttons representing plays
     private void initButtons() {
 
+    	ImageView view;
+    	//pass = new Button();
+    	
         for (int i = 0; i < NUM_PLAYS; i++) { // add buttons
             plays[i] = new Button();
             plays[i].setPrefSize(IMG_WIDTH, IMG_HEIGHT);
-            ImageView view = new ImageView(images[i]);
+            view = new ImageView(images[i]);
             view.setFitWidth(IMG_WIDTH);
             view.setFitHeight(IMG_HEIGHT);
             plays[i].setGraphic(view);
             plays[i].setDisable(true);
+            plays[i].setStyle("-fx-focus-color: transparent;");
             playBox.getChildren().add(plays[i]);
         }
         for (int i = 0; i < NUM_PLAYS; i++) { // set button actions
             final int j = i; // for lambda
             int x = i;
+            
+            //create original background image
+            view = new ImageView(images[i]);
+            final ImageView originalPic = view; 
+            
             plays[i].setOnAction(e -> {
                 new Thread(() -> {
                     for (Button b : plays) {
@@ -382,19 +439,31 @@ public class unoClient extends Application {
                     }
                     
                     synchronized (this) {
-                        //
+                        
                     	cardPics.get(x).setStatus(true);//disable card
+                    	Platform.runLater(() -> plays[x].setGraphic(originalPic) ); //set background image
                     	
-                    	send(PLAYED_SIG+cardPics.get(x).getId());
-                    	send(PLAY_SIG);
+                    	cardsPlayed++;		//increase the number of cards played
                     	
-                        delay();
-                        send("" + j);
+                    	if (cardsPlayed == 7) {
+                    		send(WINNER_SIG+id);
+                    		
+                    	}
+                    	else {
+	                    	send(PLAYED_SIG+cardPics.get(x).getId());
+	                    	send(PLAY_SIG); 
+	                        delay();
+	                        send("" + j);
+                    	}
+                        
                     }
                     Platform.runLater(() -> message.setText("Opponent's turn"));
                 }).start();
             });
+            
         }
+        
+        
     }
 
     // set connect to connect to a server
@@ -403,7 +472,7 @@ public class unoClient extends Application {
         connect.setText("Connect");
         connect.setOnAction(e -> {
 
-        	pass.setDisable(false);
+        	
             try {
                 socket = new Socket(address, port);
             } catch (Exception x) {
@@ -449,12 +518,20 @@ public class unoClient extends Application {
                     id = 0;
 
                 }
+                if (last.equals(QUIT_SIG)) { // connection successful; must wait for player 2
+
+                    
+                	//myStage.close();
+                	System.out.println("Quit");
+
+                }
                 else if (last.contains(CARD_SIG)) {
 
                 	int x = Integer.parseInt(last.substring(CARD_SIG.length()) );   	
                 	System.out.println("Number => "+x);  
                 	cardPic card = new cardPic(x,false);
-                	cardPics.add(card);
+                	cardPics.add(card);				//add card photo identifier obj to array
+                	cards.add( deck.idToCard(x)   ); //add card obj to cards array
                 	
                 }
                 else if (last.equals(SCREEN_SIG)) {
@@ -476,7 +553,22 @@ public class unoClient extends Application {
                 	//ImageView img = new ImageView(pic);
                 	Platform.runLater(() -> mainImage.setImage(pic) );
                 	
+                	//Add played card to determine which cards can be played
+                	timesPassed = 0;
+                	cardOnTop = deck.idToCard(y);
                 
+                }
+                else if (last.equals(PASS_SIG)) {
+                	
+                	timesPassed++; //increase pass counter
+                	
+                	if(timesPassed == 4) {
+                		
+                		send(TIE_SIG);
+                		
+                	}
+                	
+                	System.out.println(timesPassed);
                 }
                 else if (last.contains(UPDATE_SIG)) {//update list of clients
                 	int x = Integer.parseInt(last.substring(UPDATE_SIG.length()));
@@ -488,18 +580,21 @@ public class unoClient extends Application {
                 	clientList.clear();
                 
                 }
-                else if (last.equals(DISABLE_SIG)) {
+                //else if (last.equals(DISABLE_SIG)) {
                 	
-                	pass.setDisable(true);
+                	//pass.setDisable(true);
                 	//opponents.setDisable(true);
                 	
-                }
+                //}
                 else if (last.equals(REJECT_SIG)) {
                 	message.setText("Player in Game!");
                 }
                 else if (last.contains(WEL_SIG)) { // connection successful
 
-                    Platform.runLater(() -> message.setText("Connected"));
+                    Platform.runLater(() -> message.setText("Connected") );
+                    Platform.runLater(() -> message.setStyle("-fx-text-fill: blue") );
+                    Platform.runLater(() -> message.setFont(Font.font("Verdana", FontWeight.BOLD, 18)) );
+                    
                     id = Integer.parseInt(last.substring(WEL_SIG.length()));
                     ID.setText("ID: "+ id);
 
@@ -516,11 +611,42 @@ public class unoClient extends Application {
                         pass.setDisable(true);
                         //opponents.setDisable(true);
 
-                        for (Button b : plays) {
-                            b.setDisable(false);
+                        //for (Button b : plays) { 
+                        	//b.setDisable(false);
+                        //}
+                        
+                        boolean passTurn = true;
+                        
+                        //enable buttons that have not been played
+                        for(int i = 0; i < cards.size(); i++) {
+                        	
+                        	//enable cards that can be played
+                        	
+                        	//no one has played
+                        	if (cardOnTop.getId() == -1) {
+                        		plays[i].setDisable(false);
+                        		passTurn = false;
+                        	}
+                        	else {
+                        	
+	                        	System.out.println(cardOnTop.getNumber() + ": " + cardOnTop.getColor());
+	                        	
+	                        	//number or color is the same)
+	                        	if(  cards.get(i).getNumber() == cardOnTop.getNumber() || cards.get(i).getColor() == cardOnTop.getColor()  ) {
+	                        		//card has not been played
+	                        		if (cardPics.get(i).getStatus() == false) {
+	                        			plays[i].setDisable(false);
+	                        			passTurn = false; //disable pass
+	                        		}                        		
+	                        	}
+                        	}
+                        	
                         }
-
-                    });
+                        
+                        if (passTurn == true) {
+                        	pass.setDisable(false);
+                        }
+                    }); 
 
                 }
 
@@ -528,7 +654,8 @@ public class unoClient extends Application {
 
                     //score++;
                     Platform.runLater(() -> message.setText("You won!"));
-                    //Platform.runLater(() -> scoreText.setText(YP_TEXT + score));
+                    System.out.println("WON!");
+                    Platform.runLater(() -> message.setStyle("-fx-text-fill: green") );
 
                 }
 
@@ -536,12 +663,13 @@ public class unoClient extends Application {
 
                     //opScore++;
                     Platform.runLater(() -> message.setText("You lost!"));
-                    //Platform.runLater(() -> otherScore.setText(OP_TEXT + opScore));
+                    Platform.runLater(() -> message.setStyle("-fx-text-fill: red") );
 
                 }
 
                 else if (last.equals(TIE_SIG)) {
                     Platform.runLater(() -> message.setText("You tied!"));
+                    Platform.runLater(() -> message.setStyle("-fx-text-fill: blue") );
                 }
 
                 else if (last.contains(OP_SIG)) {
@@ -583,7 +711,10 @@ public class unoClient extends Application {
 
                         switch (source) {
 
-                            case -1 : message.setText("Server disconnect"); break;
+                            case -1 : 	message.setText("Server disconnect"); 
+                            			myStage.close();
+                            			break;
+                            			
                             case 0  : message.setText("Player 1 quit, disconnecting"); break;
                             case 1  : message.setText("Player 2 quit, disconnecting"); break;
 

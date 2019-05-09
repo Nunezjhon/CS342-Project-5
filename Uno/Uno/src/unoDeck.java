@@ -1,47 +1,58 @@
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 
 public class unoDeck {
 
 	private ArrayList<unoCard> deck;
+	private HashMap<Integer,unoCard> idToCard;
 	
 	public unoDeck (){
 	
 		deck = new ArrayList<unoCard>();
+		idToCard = new HashMap<Integer, unoCard>();
 		
 		int counter = 0;
+		cardImages images = new cardImages();
 		
 		for(int i = 0; i <= 39; i++) {
 			
 			unoCard card = new unoCard();
-			cardImages images = new cardImages();
+			
 			
 			card.setId(i); //add id
 			
 			card.setImage( images.getCardPicture(i) ); //add image
 			
-			card.setNumber(counter); //add number
+			
+			if(counter == 10) {//reset counter at 10
+				counter = 0;
+			}
 			
 			//initiate card color
 			if (i < 10) {
 				card.setColor("Blue");
-				counter = 0;
+				card.setNumber(counter); //add number
+				
 			}
-			else if (i > 9 || i < 20) {
+			else if (i >= 10 && i < 20) {
 				card.setColor("Green");
-				counter = 0;
+				card.setNumber(counter); //add number
 			}
-			else if (i > 19 || i < 30) {
+			else if (i >= 20 && i < 30) {
 				card.setColor("Yellow");
-				counter = 0;
+				card.setNumber(counter); //add number
 			}
-			else if (i > 29 || i < 40) {
+			else if (i >= 30 && i < 40) {
 				card.setColor("Red");
-				counter = 0;
+				card.setNumber(counter); //add number
 			}
 			
 			//add card
 			deck.add(card);
+			
+			//add card to map
+			idToCard.put(card.getId(), card);
 			
 			counter++;
 	
@@ -49,11 +60,11 @@ public class unoDeck {
 		
 	}
 	
-	public void shuffle() {
+	public void shuffle() { //shuffle cards
 		Collections.shuffle(deck);
 	}
 	
-	public ArrayList<unoCard> dealHand(int num){
+	public ArrayList<unoCard> dealHand(int num){//deal cards
 		
 		ArrayList<unoCard> hand = new ArrayList<unoCard>();
 		
@@ -64,4 +75,10 @@ public class unoDeck {
 		
 		return hand;
 	}
+	
+	public unoCard idToCard(int id) { //return card object based on id
+		
+		return idToCard.get(id);
+	}
+	
 }
