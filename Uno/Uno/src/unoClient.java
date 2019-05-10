@@ -596,7 +596,7 @@ public class unoClient extends Application {
                     Platform.runLater(() -> message.setFont(Font.font("Verdana", FontWeight.BOLD, 18)) );
                     
                     id = Integer.parseInt(last.substring(WEL_SIG.length()));
-		    Platform.runLater(ID.setText("ID: "+ id));
+		    Platform.runLater(()-> ID.setText("ID: "+ id));
 
                     if (id == 4) {
                     	send(CHALLENGE_SIG);
