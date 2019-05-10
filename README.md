@@ -12,4 +12,5 @@ Developed by: Jhon Nunez, Joseph Canning, Christian Dominguez
 	- Java 
 	- JavaFX
 
+Video Link: https://www.youtube.com/watch?v=wzADeRm5v9E
 
